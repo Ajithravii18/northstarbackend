@@ -135,7 +135,7 @@ export async function seedDevelopmentData() {
   }
 
   await User.deleteMany({});
-  const developmentPassword = randomBytes(24).toString("base64url");
+  const developmentPassword = process.env.DEMO_ADMIN_PASSWORD || randomBytes(24).toString("base64url");
   const adminPasswordHash = await bcrypt.hash(developmentPassword, 12);
   console.info(`Development-only shared mock-user password: ${developmentPassword}`);
 
