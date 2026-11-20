@@ -8,4 +8,4 @@ From this repository root, run `npm install` and `npm start`. Configure the envi
 
 ## Deploy
 
-Set `NODE_ENV=production`, `MONGODB_URI`, `JWT_SECRET`, `ADMIN_BOOTSTRAP_TOKEN`, `APP_ORIGINS`, `RESEND_API_KEY`, and `PASSWORD_RESET_FROM_EMAIL`. Use a replica-set-enabled MongoDB URI for transactions. Set `APP_ORIGINS` to the exact HTTPS frontend origin. The frontend and API should use HTTPS and preferably custom domains under the same site so browser session cookies work reliably.
+Set `NODE_ENV=production`, `MONGODB_URI`, `JWT_SECRET`, `ADMIN_BOOTSTRAP_TOKEN`, and `APP_ORIGINS`. Use a replica-set-enabled MongoDB URI for transactions. Set `APP_ORIGINS` to the exact HTTPS frontend origin. Configure `RESEND_API_KEY` and `PASSWORD_RESET_FROM_EMAIL` only if password-reset emails are needed; without them, the API starts normally and password recovery is unavailable. The frontend and API should use HTTPS and preferably custom domains under the same site so browser session cookies work reliably.

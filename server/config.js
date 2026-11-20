@@ -61,10 +61,6 @@ if (!isMemoryDevelopment && !process.env.APP_ORIGINS) {
   throw new Error("Set APP_ORIGINS to the exact HTTPS origin(s) serving the application.");
 }
 
-if (isProduction && (!config.resendApiKey || !config.passwordResetFromEmail)) {
-  throw new Error("Set RESEND_API_KEY and PASSWORD_RESET_FROM_EMAIL to enable production password recovery.");
-}
-
 if (config.appOrigins.length === 0) {
   throw new Error("APP_ORIGINS must contain at least one allowed application origin.");
 }
