@@ -39,6 +39,10 @@ export const assignmentSchema = z
   .object({ userIds: z.array(z.string().min(1).max(100)).max(1000) })
   .strict();
 
+export const branchUpdateSchema = z
+  .object({ branchId: z.string().trim().min(1).max(100) })
+  .strict();
+
 export const createUserSchema = z
   .object({
     name: z.string().trim().min(1).max(120),

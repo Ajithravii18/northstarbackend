@@ -13,6 +13,7 @@ import { scopeFromLabel } from "./constants.js";
 import { serializeAudit, serializeRole, serializeRoles, serializeUsers, writeAudit } from "./serializers.js";
 import {
   assignmentSchema,
+  branchUpdateSchema,
   cloneSchema,
   createUserSchema,
   forgotPasswordSchema,
@@ -714,6 +715,41 @@ api.patch(
         "User role updated",
         user.name,
         { roleId: newRole._id.toString(), roleName: newRole.name },
+        session,
+      );
+      return user;
+    });
+    res.json({ success: true, user: (await serializeUsers([updatedUser]))[0] });
+  }),
+);
+
+api.patch(
+  "/users/:id/branch",
+  checkOrigin,
+  asyncRoute(async (req, res) => {
+    const { branchId } = parseBody(branchUpdateSchema, req);
+    const updatedUser = await inTransaction(async (session) => {
+      const user = await User.findById(req.params.id).session(session);
+      if (!user) throw new HttpError(404, "User not found.", "USER_NOT_FOUND");
+
+      const branch = await Branch.findOne({ _id: branchId, isActive: true }).session(session);
+      if (!branch) throw new HttpError(400, "Select an active branch.", "INVALID_BRANCH");
+      if (user.branchId === branch._id) return user;
+
+      const previousBranchId = user.branchId ?? null;
+      const previousBranch = previousBranchId
+        ? await Branch.findById(previousBranchId).session(session)
+        : null;
+      user.branchId = branch._id;
+      await user.save({ session });
+      await writeAudit(
+        req,
+        "User branch transferred",
+        user.name,
+        {
+          before: { branchId: previousBranchId, branchName: previousBranch?.name ?? null },
+          after: { branchId: branch._id, branchName: branch.name },
+        },
         session,
       );
       return user;
