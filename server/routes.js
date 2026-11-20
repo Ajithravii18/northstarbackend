@@ -23,6 +23,7 @@ import {
   resetPasswordSchema,
   setupSchema,
   statusUpdateSchema,
+  userStatusUpdateSchema,
 } from "./validation.js";
 
 const api = Router();
@@ -669,6 +670,39 @@ api.post(
       return record;
     });
     res.status(201).json({ success: true, user: (await serializeUsers([user]))[0] });
+  }),
+);
+
+api.patch(
+  "/users/:id/status",
+  checkOrigin,
+  asyncRoute(async (req, res) => {
+    const { isActive } = parseBody(userStatusUpdateSchema, req);
+    const updatedUser = await inTransaction(async (session) => {
+      const user = await User.findById(req.params.id).session(session);
+      if (!user) throw new HttpError(404, "User not found.", "USER_NOT_FOUND");
+      if (user.isActive === isActive) return user;
+
+      const role = await Role.findById(user.roleId).session(session);
+      if (!isActive && role?.name === "System Administrator") {
+        if (req.user?._id?.toString() === user._id.toString()) {
+          throw new HttpError(409, "You cannot deactivate your own administrator account.", "SELF_DEACTIVATION");
+        }
+        await Role.updateOne({ _id: role._id }, { $inc: { adminLockVersion: 1 } }, { session });
+        const activeAdminCount = await User.countDocuments({ roleId: role._id, isActive: true }).session(session);
+        if (activeAdminCount <= 1) {
+          throw new HttpError(409, "At least one active System Administrator account must remain.", "LAST_ADMINISTRATOR");
+        }
+      }
+
+      user.isActive = isActive;
+      await user.save({ session });
+      await writeAudit(req, isActive ? "User activated" : "User deactivated", user.name, {
+        roleName: role?.name ?? null,
+      }, session);
+      return user;
+    });
+    res.json({ success: true, user: (await serializeUsers([updatedUser]))[0] });
   }),
 );
 

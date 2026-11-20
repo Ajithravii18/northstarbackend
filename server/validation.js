@@ -43,6 +43,10 @@ export const branchUpdateSchema = z
   .object({ branchId: z.string().trim().min(1).max(100) })
   .strict();
 
+export const userStatusUpdateSchema = z
+  .object({ isActive: z.boolean() })
+  .strict();
+
 export const createUserSchema = z
   .object({
     name: z.string().trim().min(1).max(120),
